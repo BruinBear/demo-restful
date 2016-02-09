@@ -1,0 +1,159 @@
+# this file describe how to setup django with mysql under ubuntu 14.04
+
+############
+Installation
+############
+# get python pip
+sudo apt-get update
+sudo apt-get install python-pip
+# get virtual environment
+sudo pip install virtualenv
+mkdir project
+cd project
+virtualenv newenv
+source newenv/bin/activate
+# now you are in the virtual environment
+
+# install django in the env
+pip install django
+django-admin --version
+
+# create a project
+django-admin startproject app
+
+# lets now take a look at the skeleton
+├── app
+│   ├── __init__.py
+│   ├── settings.py
+│   ├── urls.py
+│   └── wsgi.py
+└── manage.py
+
+# mysql server and what not
+sudo apt-get install python-dev mysql-server libmysqlclient-dev
+# allow django to connect to mysql
+pip install MySQL-python
+# create database directory
+sudo mysql_install_db
+# optional security check
+sudo mysql_secure_installation
+
+# go to mysql and create database and user for django connection
+mysql -u root -p
+CREATE DATABASE app CHARACTER SET UTF8;
+# Remember to end all commands at an SQL prompt with a semicolon.
+# Next, we will create a database user which we will use to connect to and interact with the database. Set the password to something strong and secure:
+CREATE USER scriptor@localhost IDENTIFIED BY 'fish';
+# Now, all we need to do is give our database user access rights to the database we created:
+GRANT ALL PRIVILEGES ON app.* TO scriptor@localhost;
+# Flush the changes so that they will be available during the current session:
+FLUSH PRIVILEGES;
+# Exit the SQL prompt to get back to your regular shell session:
+exit
+
+
+# update Django settings
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'scriptor',
+        'USER': 'myprojectuser',
+        'PASSWORD': 'fish',
+        'HOST': 'localhost',
+        'PORT': '',
+    }
+}
+
+
+# make your first migration
+# this create default tables for a django skeleton
+# including users, sessions and etc
+python manage.py makemigrations
+python manage.py migrate
+
+# let's create superuser for your app
+python manage.py createsuperuser
+
+# let's checkout the tables in mysql now
+# let's run django project
+python manage.py runserver 0.0.0.0:8000
+# hopefully it works
+localhost:8000/admin
+
+#####################
+How to create web app
+#####################
+# adapted from https://docs.djangoproject.com/en/1.9/intro/tutorial01/
+# start an new app
+python manage.py startapp polls
+polls
+├── admin.py
+├── apps.py
+├── __init__.py
+├── migrations 			--> schema to mysql table creation
+│   └── __init__.py
+├── models.py 			--> 
+├── tests.py
+└── views.py
+# create first route
+# polls/views.py
+from django.http import HttpResponse
+
+
+def index(request):
+    return HttpResponse("Hello, world. You're at the polls index.")
+
+# polls/urls.py
+from django.conf.urls import url
+
+from . import views
+
+urlpatterns = [
+    url(r'^$', views.index, name='index'),
+]
+
+# app/urls.py
+from django.conf.urls import include, url
+from django.contrib import admin
+
+urlpatterns = [
+    url(r'^polls/', include('polls.urls')),
+    url(r'^admin/', admin.site.urls),
+]
+
+#################
+How to be restful
+#################
+# adapted from https://godjango.com/41-start-your-api-django-rest-framework-part-1/
+# in env
+pip install djangorestframework markdown django-filter
+
+app
+├── api
+│   ├── admin.py
+│   ├── apps.py
+│   ├── __init__.py
+│   ├── migrations
+│   │   └── __init__.py
+│   ├── models.py
+│   ├── serializers.py
+│   ├── tests.py
+│   ├── urls.py
+│   └── views.py
+├── app
+│   ├── __init__.py
+│   ├── settings.py
+│   ├── urls.py
+│   └── wsgi.py
+├── manage.py
+└── task
+    ├── admin.py
+    ├── apps.py
+    ├── __init__.py
+    ├── migrations
+    │   ├── 0001_initial.py
+    │   └── __init__.py
+    ├── models.py
+    └── tests.py
+
+https://github.com/BruinBear/demo-restful
